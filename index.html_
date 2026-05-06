@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCSA Mosaic Browser</title>
+    <style>
+        :root {
+            --mosaic-blue: #1084d7;
+            --mosaic-gray: #c0c0c0;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #c0c0c0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .browser-window {
+            width: 100%;
+            max-width: 900px;
+            background: #c0c0c0;
+            border: 3px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            box-shadow: 1px 1px 0 #000000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-bar {
+            background: linear-gradient(to right, #000080, #1084d7);
+            color: white;
+            padding: 2px 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 12px;
+            height: 24px;
+        }
+
+        .title-bar-buttons {
+            display: flex;
+            gap: 2px;
+        }
+
+        .title-bar-button {
+            width: 20px;
+            height: 18px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: black;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .title-bar-button:active {
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+        }
+
+        .menu-bar {
+            background: #c0c0c0;
+            border-bottom: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            padding: 2px 4px;
+            display: flex;
+            gap: 4px;
+            font-size: 11px;
+            height: 24px;
+            align-items: center;
+        }
+
+        .menu-item {
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .menu-item:active {
+            background: #000080;
+            color: white;
+        }
+
+        .toolbar {
+            background: #c0c0c0;
+            border-bottom: 2px solid #dfdfdf;
+            padding: 4px;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .toolbar-button {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 9px;
+            text-align: center;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .toolbar-button:active {
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+        }
+
+        .toolbar-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .separator {
+            width: 2px;
+            height: 24px;
+            background: #dfdfdf;
+            border-right: 1px solid #808080;
+            margin: 0 2px;
+        }
+
+        .address-bar-container {
+            background: #c0c0c0;
+            padding: 4px;
+            border-bottom: 2px solid #dfdfdf;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .address-label {
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .address-bar {
+            flex: 1;
+            background: white;
+            border: 2px solid;
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+            padding: 2px 4px;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            outline: none;
+        }
+
+        .address-bar:focus {
+            outline: 1px dotted #000080;
+            outline-offset: -2px;
+        }
+
+        .address-button {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .address-button:active {
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+        }
+
+        .content-area {
+            flex: 1;
+            background: white;
+            overflow: auto;
+            padding: 20px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-content {
+            text-align: center;
+        }
+
+        .page-content h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #000;
+        }
+
+        .page-content p {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .game-container {
+            background: #000;
+            border: 3px solid #808080;
+            padding: 20px;
+            border-radius: 4px;
+        }
+
+        .game-container h2 {
+            color: #00ff00;
+            font-family: monospace;
+            margin-bottom: 10px;
+        }
+
+        .game-canvas {
+            border: 2px solid #fff;
+            display: block;
+            margin: 0 auto;
+            background: #000;
+        }
+
+        .game-stats {
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 14px;
+            margin-top: 20px;
+            text-align: left;
+            background: #000;
+            padding: 10px;
+            border: 2px solid #00ff00;
+        }
+
+        .game-stats div {
+            margin: 4px 0;
+        }
+
+        .game-info {
+            color: #00ff00;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .status-bar {
+            background: #c0c0c0;
+            border-top: 2px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            padding: 2px 4px;
+            font-size: 11px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            color: #000;
+        }
+
+        @media (max-width: 600px) {
+            .browser-window {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="browser-window">
+        <!-- Title Bar -->
+        <div class="title-bar">
+            <span>🌐 NCSA Mosaic - [Untitled]</span>
+            <div class="title-bar-buttons">
+                <button class="title-bar-button">_</button>
+                <button class="title-bar-button">☐</button>
+                <button class="title-bar-button">✕</button>
+            </div>
+        </div>
+
+        <!-- Menu Bar -->
+        <div class="menu-bar">
+            <span class="menu-item">File</span>
+            <span class="menu-item">Edit</span>
+            <span class="menu-item">View</span>
+            <span class="menu-item">Navigate</span>
+            <span class="menu-item">Annotate</span>
+            <span class="menu-item">Help</span>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button class="toolbar-button" title="Back">◀</button>
+            <button class="toolbar-button" title="Forward">▶</button>
+            <button class="toolbar-button" title="Home">⌂</button>
+            <button class="toolbar-button" title="Reload">↻</button>
+            <button class="toolbar-button" title="Stop">⊗</button>
+            <div class="separator"></div>
+            <button class="toolbar-button" title="Print">📄</button>
+            <button class="toolbar-button" title="Find">🔍</button>
+        </div>
+
+        <!-- Address Bar -->
+        <div class="address-bar-container">
+            <label class="address-label">Starting location:</label>
+            <input type="text" class="address-bar" id="addressBar" placeholder="Type a URL (e.g., google.com, microsoft.com)" value="about:blank">
+            <button class="address-button" onclick="navigateTo()">Open URL</button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area" id="contentArea">
+            <div class="page-content">
+                <div style="font-size: 48px; margin-bottom: 20px;">🌐</div>
+                <h1 style="font-size: 36px; margin-bottom: 10px; color: #1084d7;">NCSA Mosaic</h1>
+                <p style="font-size: 14px; color: #666; margin-bottom: 30px;">The Web Browser of the Future - With Retro Gaming!</p>
+                <p style="margin-top: 25px; font-size: 13px; color: #000; font-weight: bold;">🎮 Start Gaming:</p>
+                <p style="margin-top: 15px; font-size: 12px; color: #333; line-height: 1.8;">
+                    Type <strong>home.com</strong> for game directory<br>
+                    Type <strong>baby.com</strong> for information<br><br>
+                    Or try any domain to play a game!
+                </p>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span>Ready</span>
+        </div>
+    </div>
+
+    <script>
+        const addressBar = document.getElementById('addressBar');
+        const contentArea = document.getElementById('contentArea');
+
+        // EVENT LISTENERS
+        addressBar.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                navigateTo();
+            }
+        });
+
+        // MAIN NAVIGATION FUNCTION
+        function navigateTo() {
+            const url = addressBar.value.toLowerCase().trim().replace('www.', '');
+            
+            if (url === 'home.com' || url === 'about:blank') {
+                showHomePage();
+            } else if (url === 'baby.com') {
+                showAboutPage();
+            } else if (url === 'google.com' || url === 'bing.com') {
+                startTetris();
+            } else if (url === 'microsoft.com' || url === 'github.com') {
+                startSnake();
+            } else if (url === 'youtube.com' || url === 'netflix.com') {
+                startFlappyBird();
+            } else if (url === 'twitter.com' || url === 'facebook.com') {
+                startBreakout();
+            } else if (url === 'msn.com') {
+                startTetris(); // MSN redirects to Bing Tetris
+            } else if (url === 'seb.com' || url === 'saahirtsharma-hub.github.io/search_engine_beta/' || url === 'saahirtsharma-hub.github.io/search_engine_beta') {
+                showSearchEngineBeta();
+            } else if (url === 'pinball.com') {
+                startPinball();
+            } else if (url === 'minesweeper.com') {
+                showMinesweeperCustomization();
+            } else {
+                showNormalPage(url);
+            }
+        }
+
+        function showHomePage() {
+            contentArea.innerHTML = `
+                <div class="page-content">
+                    <h1 style="font-size: 36px; margin-bottom: 30px;">🌐 Mosaic</h1>
+                    <div style="margin-top: 30px; font-size: 24px; color: #333;">
+                        <strong>See all at home.com</strong>
+                    </div>
+                    <div style="margin-top: 40px; font-size: 12px; color: #333; line-height: 2.2; text-align: left; display: inline-block; background: #f0f0f0; padding: 20px; border: 1px solid #999;">
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #0000aa; font-size: 13px;">🧩 TETRIS</strong><br>
+                            📌 google.com<br>
+                            📌 bing.com<br>
+                            📌 msn.com
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #0000aa; font-size: 13px;">🐍 SNAKE</strong><br>
+                            📌 microsoft.com<br>
+                            📌 github.com
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #0000aa; font-size: 13px;">🐦 FLAPPY BIRD</strong><br>
+                            📌 youtube.com<br>
+                            📌 netflix.com
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #0000aa; font-size: 13px;">🎯 BREAKOUT</strong><br>
+                            📌 twitter.com<br>
+                            📌 facebook.com
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #0000aa; font-size: 13px;">🔍 RANDOM GAME</strong><br>
+                            📌 seb.com
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #0000aa; font-size: 13px;">🎮 3D PINBALL</strong><br>
+                            📌 pinball.com
+                        </div>
+                        <div style="margin-bottom: 0;">
+                            <strong style="color: #0000aa; font-size: 13px;">💣 MINESWEEPER</strong><br>
+                            📌 minesweeper.com
+                        </div>
+                    </div>
+                </div>
+            `;
+            addressBar.value = 'home.com';
+        }
+
+        function showAboutPage() {
+            contentArea.innerHTML = `
+                <div class="page-content">
+                    <h1 style="font-size: 32px; margin-bottom: 20px;">ℹ️ About Mosaic</h1>
+                    
+                    <div style="max-width: 700px; text-align: left; background: #f0f0f0; padding: 20px; border: 2px solid #999; border-radius: 4px; line-height: 1.8;">
+                        <p style="font-size: 14px; margin-bottom: 15px; color: #333;">
+                            <strong>Welcome to Mosaic Browser - A Nostalgic Gaming Hub!</strong>
+                        </p>
+                        
+                        <p style="font-size: 13px; margin-bottom: 15px; color: #333;">
+                            This is a fun, retro-styled browser simulator inspired by the classic Mosaic web browser from the 1990s. Instead of actual websites, visiting different domains takes you to exciting classic games and gaming experiences!
+                        </p>
+
+                        <p style="font-size: 13px; margin-bottom: 20px; color: #333; font-weight: bold;">
+                            🎮 Games Available:
+                        </p>
+
+                        <div style="font-size: 12px; color: #333; margin-left: 20px; margin-bottom: 20px;">
+                            <p style="margin-bottom: 8px;">🧩 <strong>Tetris</strong> - Classic block-stacking game on google.com, bing.com, or msn.com</p>
+                            <p style="margin-bottom: 8px;">🐍 <strong>Snake</strong> - Collect food and grow on microsoft.com or github.com</p>
+                            <p style="margin-bottom: 8px;">🐦 <strong>Flappy Bird</strong> - Navigate through pipes on youtube.com or netflix.com</p>
+                            <p style="margin-bottom: 8px;">🎯 <strong>Breakout</strong> - Paddle and brick-breaking action on twitter.com or facebook.com</p>
+                            <p style="margin-bottom: 8px;">🔍 <strong>Random Game Generator</strong> - Get a random game on seb.com</p>
+                            <p style="margin-bottom: 8px;">🎮 <strong>3D Pinball Space Cadet</strong> - Classic pinball physics on pinball.com</p>
+                            <p style="margin-bottom: 8px;">💣 <strong>Custom Minesweeper</strong> - Create and play custom games on minesweeper.com</p>
+                        </div>
+
+                        <p style="font-size: 13px; margin-bottom: 15px; color: #333; font-weight: bold;">
+                            📍 Navigation:
+                        </p>
+
+                        <div style="font-size: 12px; color: #333; margin-left: 20px; margin-bottom: 20px;">
+                            <p style="margin-bottom: 8px;">• <strong>home.com</strong> - Site directory showing all available games</p>
+                            <p style="margin-bottom: 8px;">• <strong>baby.com</strong> - This information page</p>
+                            <p style="margin-bottom: 8px;">• Type any domain in the address bar and press Enter to navigate</p>
+                        </div>
+
+                        <p style="font-size: 13px; color: #666; font-style: italic; border-top: 1px solid #999; padding-top: 15px;">
+                            Built as a fun nostalgic tribute to 90's gaming and web browsing culture. Enjoy the retro vibes! 🎮✨
+                        </p>
+                    </div>
+                </div>
+            `;
+            addressBar.value = 'baby.com';
+        }
+
+        function showNormalPage(url) {
+            contentArea.innerHTML = `
+                <div class="page-content">
+                    <h1>📄 ${url}</h1>
+                    <p style="margin-top: 20px;">This is a normal web page.</p>
+                    <p style="font-size: 12px; color: #666;">Try one of the secret gaming sites!</p>
+                </div>
+            `;
+        }
+
+        function showSearchEngineBeta() {
+            contentArea.innerHTML = `
+                <div style="padding: 20px; max-width: 600px; margin: 0 auto;">
+                    <h1 style="text-align: center; margin-bottom: 30px; color: #333;">🔍 SEB.com - Search Engine Beta</h1>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="margin-bottom: 20px;">
+                            <label style="font-weight: bold; color: #333; display: block; margin-bottom: 8px;">Google Search</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="google-search-beta" placeholder="Type anything and get a random game!" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                <button id="google-search-btn" style="padding: 10px 20px; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Search</button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 0;">
+                            <label style="font-weight: bold; color: #333; display: block; margin-bottom: 8px;">Bing Search</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="bing-search-beta" placeholder="Type anything and get a random game!" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                <button id="bing-search-btn" style="padding: 10px 20px; background: #008373; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Search</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center;">
+                        <p style="font-size: 13px; color: #666; margin-bottom: 10px;">💡 <strong>How it works:</strong></p>
+                        <p style="font-size: 12px; color: #666;">Type anything in Google or Bing search and get taken to a random game!</p>
+                        <p style="font-size: 12px; color: #666; margin-top: 10px;">🧩 Tetris • 🐍 Snake • 🐦 Flappy Bird • 🎯 Breakout • 🎮 Pinball • 💣 Minesweeper</p>
+                    </div>
+                </div>
+            `;
+            addressBar.value = 'seb.com';
+            
+            // Add event listeners after DOM is created
+            setTimeout(() => {
+                const googleBtn = document.getElementById('google-search-btn');
+                const bingBtn = document.getElementById('bing-search-btn');
+                const googleInput = document.getElementById('google-search-beta');
+                const bingInput = document.getElementById('bing-search-beta');
+                
+                function playRandomGame() {
+                    const randomIndex = Math.floor(Math.random() * 6);
+                    console.log('Random index:', randomIndex);
+                    switch(randomIndex) {
+                        case 0:
+                            startTetris();
+                            break;
+                        case 1:
+                            startSnake();
+                            break;
+                        case 2:
+                            startFlappyBird();
+                            break;
+                        case 3:
+                            startBreakout();
+                            break;
+                        case 4:
+                            startPinball();
+                            break;
+                        case 5:
+                            showMinesweeperCustomization();
+                            break;
+                    }
+                }
+                
+                if (googleBtn) {
+                    googleBtn.addEventListener('click', () => {
+                        if (googleInput && googleInput.value.trim()) {
+                            playRandomGame();
+                        }
+                    });
+                }
+                
+                if (bingBtn) {
+                    bingBtn.addEventListener('click', () => {
+                        if (bingInput && bingInput.value.trim()) {
+                            playRandomGame();
+                        }
+                    });
+                }
+                
+                if (googleInput) {
+                    googleInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && googleInput.value.trim()) {
+                            playRandomGame();
+                        }
+                    });
+                }
+                
+                if (bingInput) {
+                    bingInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && bingInput.value.trim()) {
+                            playRandomGame();
+                        }
+                    });
+                }
+            }, 0);
+        }
+
+        // GAME START FUNCTIONS
+        function startTetris() {
+            contentArea.innerHTML = `
+                <div class="game-container">
+                    <h2>🎮 TETRIS 🎮</h2>
+                    <div id="tetrisBoard"></div>
+                    <div class="game-stats">
+                        <div>Score: <span id="score">0</span></div>
+                        <div>Level: <span id="level">1</span></div>
+                        <div>Lines: <span id="lines">0</span></div>
+                    </div>
+                    <div class="game-info">
+                        <p>Use ARROW KEYS to move | UP ARROW to rotate | P to pause</p>
+                    </div>
+                </div>
+            `;
+            new TetrisGame().start();
+        }
+
+        function startSnake() {
+            contentArea.innerHTML = `
+                <div class="game-container">
+                    <h2 style="color: #ffff00;">🐍 SNAKE 🐍</h2>
+                    <canvas id="snakeCanvas" width="400" height="400" class="game-canvas"></canvas>
+                    <div class="game-stats">
+                        <div>Score: <span id="snakeScore">0</span></div>
+                        <div>Length: <span id="snakeLength">3</span></div>
+                    </div>
+                    <div class="game-info">
+                        <p>TAP arrow keys for 1 step | HOLD for lightning speed! | P to pause</p>
+                    </div>
+                </div>
+            `;
+            new SnakeGame().start();
+        }
+
+        function startFlappyBird() {
+            contentArea.innerHTML = `
+                <div class="game-container">
+                    <h2 style="color: #ff0000;">🐦 FLAPPY BIRD 🐦</h2>
+                    <canvas id="flappyCanvas" width="400" height="500" class="game-canvas"></canvas>
+                    <div class="game-stats">
+                        <div>Score: <span id="flappyScore">0</span></div>
+                    </div>
+                    <div class="game-info">
+                        <p>Click or Press SPACE to flap | Don't hit pipes!</p>
+                    </div>
+                </div>
+            `;
+            new FlappyBirdGame().start();
+        }
+
+        function startBreakout() {
+            contentArea.innerHTML = `
+                <div class="game-container">
+                    <h2 style="color: #00ffff;">🎯 BREAKOUT 🎯</h2>
+                    <canvas id="breakoutCanvas" width="480" height="320" class="game-canvas"></canvas>
+                    <div class="game-stats">
+                        <div>Score: <span id="breakoutScore">0</span></div>
+                        <div>Lives: <span id="breakoutLives">3</span></div>
+                    </div>
+                    <div class="game-info">
+                        <p>Move paddle with ARROW KEYS | Destroy all blocks!</p>
+                    </div>
+                </div>
+            `;
+            new BreakoutGame().start();
+        }
+
+        function startPinball() {
+            contentArea.innerHTML = `
+                <div class="game-container">
+                    <h2 style="color: #ff00ff;">🎮 3D PINBALL SPACE CADET 🎮</h2>
+                    <canvas id="pinballCanvas" width="400" height="600" class="game-canvas"></canvas>
+                    <div class="game-stats">
+                        <div>Score: <span id="pinballScore">0</span></div>
+                        <div>Ball: <span id="pinballBall">1</span>/3</div>
+                    </div>
+                    <div class="game-info">
+                        <p>LEFT/RIGHT ARROW - Flippers | SPACE - Launch Ball</p>
+                    </div>
+                </div>
+            `;
+            new PinballGame().start();
+        }
+
+        function showMinesweeperCustomization() {
+            contentArea.innerHTML = `
+                <div style="padding: 20px; max-width: 500px; margin: 0 auto;">
+                    <h1 style="text-align: center; margin-bottom: 30px; color: #333;">💣 MINESWEEPER - Custom Game 💣</h1>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold; color: #333; display: block; margin-bottom: 5px;">Grid Size - Width:</label>
+                            <input type="number" id="mineWidth" min="5" max="20" value="10" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-weight: bold; color: #333; display: block; margin-bottom: 5px;">Grid Size - Height:</label>
+                            <input type="number" id="mineHeight" min="5" max="20" value="10" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="font-weight: bold; color: #333; display: block; margin-bottom: 5px;">Number of Mines:</label>
+                            <input type="number" id="mineCount" min="1" max="50" value="10" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                        </div>
+
+                        <button id="startMineBtn" style="width: 100%; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px;">Start Game</button>
+                    </div>
+
+                    <div style="margin-top: 20px; background: #f0f0f0; padding: 15px; border-radius: 8px; text-align: center; font-size: 12px; color: #666;">
+                        <p><strong>How to play:</strong></p>
+                        <p>Left-click to reveal squares | Right-click to flag mines</p>
+                        <p>Reveal all non-mine squares to win!</p>
+                    </div>
+                </div>
+            `;
+            addressBar.value = 'minesweeper.com';
+            
+            setTimeout(() => {
+                const startBtn = document.getElementById('startMineBtn');
+                if (startBtn) {
+                    startBtn.addEventListener('click', () => {
+                        const width = parseInt(document.getElementById('mineWidth').value) || 10;
+                        const height = parseInt(document.getElementById('mineHeight').value) || 10;
+                        const mines = parseInt(document.getElementById('mineCount').value) || 10;
+                        
+                        if (mines >= width * height) {
+                            alert('Number of mines must be less than total squares!');
+                            return;
+                        }
+                        
+                        startMinesweeper(width, height, mines);
+                    });
+                }
+            }, 0);
+        }
+
+        function startMinesweeper(width, height, mineCount) {
+            contentArea.innerHTML = `
+                <div class="game-container">
+                    <h2 style="color: #FFA500;">💣 MINESWEEPER 💣</h2>
+                    <div style="margin-bottom: 15px;">
+                        <span style="color: #00ff00; font-family: monospace;">Grid: ${width}x${height} | Mines: ${mineCount} | Flags: <span id="flagCount">0</span></span>
+                    </div>
+                    <div id="minesweeperBoard" style="background: #c0c0c0; padding: 10px; border: 3px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf; display: inline-block;"></div>
+                    <div class="game-info">
+                        <p>Left-click to reveal | Right-click to flag | Reset to restart</p>
+                    </div>
+                    <button onclick="showMinesweeperCustomization()" style="margin-top: 15px; padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Back to Settings</button>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                new MinesweeperGame(width, height, mineCount).start();
+            }, 0);
+        }
+
+        // TETRIS GAME CLASS
+        class TetrisGame {
+            constructor() {
+                this.width = 10;
+                this.height = 20;
+                this.board = Array(this.height).fill(null).map(() => Array(this.width).fill(0));
+                this.score = 0;
+                this.lines = 0;
+                this.level = 1;
+                this.gameRunning = true;
+                this.currentPiece = null;
+                this.gameSpeed = 800;
+
+                this.pieces = {
+                    I: { shape: [[1,1,1,1]], color: 'i' },
+                    O: { shape: [[1,1],[1,1]], color: 'o' },
+                    T: { shape: [[0,1,0],[1,1,1]], color: 't' },
+                    S: { shape: [[0,1,1],[1,1,0]], color: 's' },
+                    Z: { shape: [[1,1,0],[0,1,1]], color: 'z' },
+                    J: { shape: [[1,0,0],[1,1,1]], color: 'j' },
+                    L: { shape: [[0,0,1],[1,1,1]], color: 'l' }
+                };
+
+                this.pieceTypes = Object.keys(this.pieces);
+            }
+
+            start() {
+                this.spawnPiece();
+                this.render();
+                this.gameLoop = setInterval(() => {
+                    if (this.gameRunning) this.movePieceDown();
+                }, this.gameSpeed);
+
+                document.addEventListener('keydown', (e) => this.handleKey(e));
+            }
+
+            spawnPiece() {
+                const type = this.pieceTypes[Math.floor(Math.random() * this.pieceTypes.length)];
+                this.currentPiece = {
+                    type: type,
+                    shape: this.pieces[type].shape,
+                    color: this.pieces[type].color,
+                    x: Math.floor(this.width / 2) - 1,
+                    y: 0
+                };
+            }
+
+            handleKey(e) {
+                if (!this.gameRunning) return;
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        if (this.canMove(this.currentPiece.x - 1, this.currentPiece.y)) {
+                            this.currentPiece.x--;
+                            this.render();
+                        }
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        if (this.canMove(this.currentPiece.x + 1, this.currentPiece.y)) {
+                            this.currentPiece.x++;
+                            this.render();
+                        }
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.movePieceDown();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.rotatePiece();
+                        break;
+                    case 'p':
+                    case 'P':
+                        this.gameRunning = !this.gameRunning;
+                        break;
+                }
+            }
+
+            movePieceDown() {
+                if (this.canMove(this.currentPiece.x, this.currentPiece.y + 1)) {
+                    this.currentPiece.y++;
+                    this.render();
+                } else {
+                    this.placePiece();
+                    this.checkLines();
+                    this.spawnPiece();
+                    if (!this.canMove(this.currentPiece.x, this.currentPiece.y)) {
+                        this.gameRunning = false;
+                        clearInterval(this.gameLoop);
+                        setTimeout(() => alert(`Game Over! Final Score: ${this.score}`), 100);
+                    }
+                    this.render();
+                }
+            }
+
+            rotatePiece() {
+                const rotated = this.rotatePieceShape(this.currentPiece.shape);
+                const oldShape = this.currentPiece.shape;
+                this.currentPiece.shape = rotated;
+                if (!this.canMove(this.currentPiece.x, this.currentPiece.y)) {
+                    this.currentPiece.shape = oldShape;
+                }
+                this.render();
+            }
+
+            rotatePieceShape(shape) {
+                return shape[0].map((_, i) => shape.map(row => row[i])).reverse();
+            }
+
+            canMove(x, y) {
+                for (let row = 0; row < this.currentPiece.shape.length; row++) {
+                    for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
+                        if (this.currentPiece.shape[row][col]) {
+                            const newX = x + col;
+                            const newY = y + row;
+                            if (newX < 0 || newX >= this.width || newY >= this.height) return false;
+                            if (newY >= 0 && this.board[newY][newX]) return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            placePiece() {
+                for (let row = 0; row < this.currentPiece.shape.length; row++) {
+                    for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
+                        if (this.currentPiece.shape[row][col]) {
+                            const y = this.currentPiece.y + row;
+                            const x = this.currentPiece.x + col;
+                            if (y >= 0) this.board[y][x] = this.currentPiece.color;
+                        }
+                    }
+                }
+            }
+
+            checkLines() {
+                let linesCleared = 0;
+                for (let row = this.height - 1; row >= 0; row--) {
+                    if (this.board[row].every(cell => cell !== 0)) {
+                        this.board.splice(row, 1);
+                        this.board.unshift(Array(this.width).fill(0));
+                        linesCleared++;
+                    }
+                }
+                if (linesCleared > 0) {
+                    this.lines += linesCleared;
+                    this.score += linesCleared * 100;
+                    this.level = Math.floor(this.lines / 10) + 1;
+                    this.gameSpeed = Math.max(100, 800 - (this.level - 1) * 50);
+                    clearInterval(this.gameLoop);
+                    this.gameLoop = setInterval(() => {
+                        if (this.gameRunning) this.movePieceDown();
+                    }, this.gameSpeed);
+                }
+            }
+
+            render() {
+                const board = document.getElementById('tetrisBoard');
+                if (!board) return;
+                let html = '';
+                for (let row = 0; row < this.height; row++) {
+                    for (let col = 0; col < this.width; col++) {
+                        const cellValue = this.board[row][col];
+                        let color = '#000';
+                        if (cellValue) {
+                            color = this.getBlockColor(cellValue);
+                        } else if (this.currentPiece && this.isCurrentPieceBlock(row, col)) {
+                            color = this.getBlockColor(this.currentPiece.color);
+                        }
+                        html += `<div style="display:inline-block;width:24px;height:24px;border:1px solid #444;background:${color}"></div>`;
+                    }
+                    html += '<br>';
+                }
+                board.innerHTML = html;
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('lines').textContent = this.lines;
+            }
+
+            getBlockColor(colorKey) {
+                const colors = {
+                    'i': '#00ffff',
+                    'o': '#ffff00',
+                    't': '#ff00ff',
+                    's': '#00ff00',
+                    'z': '#ff0000',
+                    'j': '#0000ff',
+                    'l': '#ff8800'
+                };
+                return colors[colorKey] || '#000';
+            }
+
+            isCurrentPieceBlock(row, col) {
+                for (let r = 0; r < this.currentPiece.shape.length; r++) {
+                    for (let c = 0; c < this.currentPiece.shape[r].length; c++) {
+                        if (this.currentPiece.shape[r][c] && 
+                            this.currentPiece.y + r === row && 
+                            this.currentPiece.x + c === col) return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        // SNAKE GAME CLASS
+        class SnakeGame {
+            constructor() {
+                this.canvas = document.getElementById('snakeCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gridSize = 20;
+                this.snake = [{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}];
+                this.direction = {x: 1, y: 0};
+                this.nextDirection = {x: 1, y: 0};
+                this.food = this.generateFood();
+                this.score = 0;
+                this.gameRunning = true;
+                this.lightningMode = false;
+                this.lastMoveTime = 0;
+                this.holdStart = null;
+                this.activeKeys = {};
+            }
+
+            generateFood() {
+                let food;
+                do {
+                    food = {
+                        x: Math.floor(Math.random() * (this.canvas.width / this.gridSize)),
+                        y: Math.floor(Math.random() * (this.canvas.height / this.gridSize))
+                    };
+                } while (this.snake.some(s => s.x === food.x && s.y === food.y));
+                return food;
+            }
+
+            start() {
+                document.addEventListener('keydown', (e) => {
+                    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                        e.preventDefault();
+                        if (!this.activeKeys[e.key]) {
+                            this.holdStart = Date.now();
+                            this.activeKeys[e.key] = true;
+                            this.setDirection(e.key);
+                            this.moveSnakeOnce();
+                        }
+                    }
+                    if (e.key === 'p' || e.key === 'P') {
+                        this.gameRunning = !this.gameRunning;
+                    }
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                        e.preventDefault();
+                        this.activeKeys[e.key] = false;
+                        this.lightningMode = false;
+                        this.holdStart = null;
+                    }
+                });
+                
+                this.gameLoop = setInterval(() => this.update(), 500);
+                this.lightningCheckLoop = setInterval(() => this.checkLightning(), 50);
+                this.render();
+            }
+
+            setDirection(key) {
+                if (this.direction.x === 0 && (key === 'ArrowLeft' || key === 'ArrowRight')) {
+                    this.nextDirection = key === 'ArrowLeft' ? {x: -1, y: 0} : {x: 1, y: 0};
+                } else if (this.direction.y === 0 && (key === 'ArrowUp' || key === 'ArrowDown')) {
+                    this.nextDirection = key === 'ArrowUp' ? {x: 0, y: -1} : {x: 0, y: 1};
+                }
+            }
+
+            checkLightning() {
+                if (this.holdStart && (Date.now() - this.holdStart) > 300) {
+                    this.lightningMode = true;
+                }
+            }
+
+            moveSnakeOnce() {
+                if (!this.gameRunning) return;
+                
+                this.direction = this.nextDirection;
+                const head = {x: this.snake[0].x + this.direction.x, y: this.snake[0].y + this.direction.y};
+
+                if (head.x < 0 || head.x >= this.canvas.width / this.gridSize || 
+                    head.y < 0 || head.y >= this.canvas.height / this.gridSize ||
+                    this.snake.some(s => s.x === head.x && s.y === head.y)) {
+                    clearInterval(this.gameLoop);
+                    clearInterval(this.lightningCheckLoop);
+                    alert(`Game Over! Score: ${this.score}`);
+                    return;
+                }
+
+                this.snake.unshift(head);
+                if (head.x === this.food.x && head.y === this.food.y) {
+                    this.score += 10;
+                    this.food = this.generateFood();
+                } else {
+                    this.snake.pop();
+                }
+                this.render();
+            }
+
+            update() {
+                if (!this.lightningMode && this.gameRunning) {
+                    this.moveSnakeOnce();
+                }
+            }
+
+            render() {
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.ctx.fillStyle = '#ffff00';
+                this.snake.forEach((segment, index) => {
+                    if (this.lightningMode && index === 0) {
+                        this.ctx.shadowColor = '#ffff00';
+                        this.ctx.shadowBlur = 15;
+                    } else {
+                        this.ctx.shadowColor = 'transparent';
+                        this.ctx.shadowBlur = 0;
+                    }
+                    this.ctx.fillRect(segment.x * this.gridSize + 1, segment.y * this.gridSize + 1, this.gridSize - 2, this.gridSize - 2);
+                });
+                
+                this.ctx.shadowColor = 'transparent';
+                this.ctx.shadowBlur = 0;
+                this.ctx.fillStyle = '#ff0000';
+                this.ctx.fillRect(this.food.x * this.gridSize + 1, this.food.y * this.gridSize + 1, this.gridSize - 2, this.gridSize - 2);
+                
+                document.getElementById('snakeScore').textContent = this.score;
+                document.getElementById('snakeLength').textContent = this.snake.length;
+            }
+        }
+
+        // FLAPPY BIRD GAME CLASS
+        class FlappyBirdGame {
+            constructor() {
+                this.canvas = document.getElementById('flappyCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.bird = {x: 50, y: this.canvas.height / 2, width: 30, height: 30, velocity: 0};
+                this.gravity = 0.5;
+                this.pipes = [];
+                this.score = 0;
+                this.gameRunning = true;
+                this.pipeGap = 120;
+                this.pipeFrequency = 100;
+                this.frameCount = 0;
+            }
+
+            start() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === ' ') {
+                        e.preventDefault();
+                        this.flap();
+                    }
+                });
+                this.canvas.addEventListener('click', () => this.flap());
+                this.gameLoop = setInterval(() => this.update(), 30);
+            }
+
+            flap() {
+                if (this.gameRunning) this.bird.velocity = -12;
+            }
+
+            update() {
+                if (!this.gameRunning) return;
+                this.frameCount++;
+                this.bird.velocity += this.gravity;
+                this.bird.y += this.bird.velocity;
+
+                if (this.frameCount % this.pipeFrequency === 0) {
+                    const pipeY = Math.random() * (this.canvas.height - this.pipeGap - 100) + 50;
+                    this.pipes.push({x: this.canvas.width, y: pipeY});
+                }
+
+                this.pipes.forEach((pipe, index) => {
+                    pipe.x -= 5;
+                    if (pipe.x + 60 < this.bird.x && !pipe.scored) {
+                        this.score++;
+                        pipe.scored = true;
+                    }
+                    if (pipe.x < -60) this.pipes.splice(index, 1);
+                });
+
+                if (this.bird.y < 0 || this.bird.y + this.bird.height > this.canvas.height) {
+                    this.endGame();
+                }
+
+                this.pipes.forEach(pipe => {
+                    if (this.bird.x + this.bird.width > pipe.x && this.bird.x < pipe.x + 60 &&
+                        (this.bird.y < pipe.y || this.bird.y + this.bird.height > pipe.y + this.pipeGap)) {
+                        this.endGame();
+                    }
+                });
+                this.render();
+            }
+
+            endGame() {
+                this.gameRunning = false;
+                clearInterval(this.gameLoop);
+                alert(`Game Over! Score: ${this.score}`);
+            }
+
+            render() {
+                this.ctx.fillStyle = '#87CEEB';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.fillStyle = '#ff0000';
+                this.ctx.fillRect(this.bird.x, this.bird.y, this.bird.width, this.bird.height);
+                this.ctx.fillStyle = '#00ff00';
+                this.pipes.forEach(pipe => {
+                    this.ctx.fillRect(pipe.x, 0, 60, pipe.y);
+                    this.ctx.fillRect(pipe.x, pipe.y + this.pipeGap, 60, this.canvas.height - pipe.y - this.pipeGap);
+                });
+                document.getElementById('flappyScore').textContent = this.score;
+            }
+        }
+
+        // BREAKOUT GAME CLASS
+        class BreakoutGame {
+            constructor() {
+                this.canvas = document.getElementById('breakoutCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.paddle = {x: this.canvas.width / 2 - 40, y: this.canvas.height - 20, width: 80, height: 10};
+                this.ball = {x: this.canvas.width / 2, y: this.canvas.height - 40, radius: 5, velocityX: 4, velocityY: -4};
+                this.bricks = this.generateBricks();
+                this.score = 0;
+                this.lives = 3;
+                this.gameRunning = true;
+                this.paddleDirection = 0;
+            }
+
+            generateBricks() {
+                const bricks = [];
+                for (let row = 0; row < 3; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        bricks.push({x: col * 60, y: row * 20 + 10, width: 60, height: 20});
+                    }
+                }
+                return bricks;
+            }
+
+            start() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') this.paddleDirection = -1;
+                    if (e.key === 'ArrowRight') this.paddleDirection = 1;
+                });
+                document.addEventListener('keyup', () => {
+                    this.paddleDirection = 0;
+                });
+                this.gameLoop = setInterval(() => this.update(), 30);
+            }
+
+            update() {
+                if (!this.gameRunning) return;
+                this.paddle.x += this.paddleDirection * 7;
+                if (this.paddle.x < 0) this.paddle.x = 0;
+                if (this.paddle.x + this.paddle.width > this.canvas.width) this.paddle.x = this.canvas.width - this.paddle.width;
+
+                this.ball.x += this.ball.velocityX;
+                this.ball.y += this.ball.velocityY;
+
+                if (this.ball.x - this.ball.radius < 0 || this.ball.x + this.ball.radius > this.canvas.width) {
+                    this.ball.velocityX *= -1;
+                }
+                if (this.ball.y - this.ball.radius < 0) {
+                    this.ball.velocityY *= -1;
+                }
+
+                if (this.ball.y - this.ball.radius > this.canvas.height) {
+                    this.lives--;
+                    if (this.lives <= 0) {
+                        this.gameRunning = false;
+                        clearInterval(this.gameLoop);
+                        alert(`Game Over! Final Score: ${this.score}`);
+                        return;
+                    }
+                    this.ball = {x: this.canvas.width / 2, y: this.canvas.height - 40, radius: 5, velocityX: 4, velocityY: -4};
+                }
+
+                if (this.ball.y + this.ball.radius > this.paddle.y && 
+                    this.ball.x > this.paddle.x && this.ball.x < this.paddle.x + this.paddle.width) {
+                    this.ball.velocityY *= -1;
+                    this.ball.velocityX += (this.ball.x - (this.paddle.x + this.paddle.width / 2)) / 20;
+                }
+
+                this.bricks = this.bricks.filter(brick => {
+                    if (this.ball.x + this.ball.radius > brick.x && this.ball.x - this.ball.radius < brick.x + brick.width &&
+                        this.ball.y + this.ball.radius > brick.y && this.ball.y - this.ball.radius < brick.y + brick.height) {
+                        this.score += 10;
+                        this.ball.velocityY *= -1;
+                        return false;
+                    }
+                    return true;
+                });
+
+                if (this.bricks.length === 0) {
+                    this.gameRunning = false;
+                    clearInterval(this.gameLoop);
+                    alert(`You Won! Final Score: ${this.score}`);
+                }
+                this.render();
+            }
+
+            render() {
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.fillStyle = '#00ffff';
+                this.ctx.fillRect(this.paddle.x, this.paddle.y, this.paddle.width, this.paddle.height);
+                this.ctx.fillStyle = '#ffff00';
+                this.ctx.beginPath();
+                this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.fillStyle = '#00ff00';
+                this.bricks.forEach(brick => {
+                    this.ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+                });
+                document.getElementById('breakoutScore').textContent = this.score;
+                document.getElementById('breakoutLives').textContent = this.lives;
+            }
+        }
+
+        // PINBALL GAME CLASS
+        class PinballGame {
+            constructor() {
+                this.canvas = document.getElementById('pinballCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.score = 0;
+                this.ball = {x: this.canvas.width / 2, y: 100, vx: 0, vy: 0, radius: 8};
+                this.leftFlipper = {x: 80, y: this.canvas.height - 80, length: 80, angle: 0};
+                this.rightFlipper = {x: this.canvas.width - 80, y: this.canvas.height - 80, length: 80, angle: 0};
+                this.bumpers = [
+                    {x: 100, y: 150, radius: 20},
+                    {x: this.canvas.width - 100, y: 150, radius: 20},
+                    {x: this.canvas.width / 2, y: 250, radius: 20}
+                ];
+                this.ballsLeft = 3;
+                this.gameRunning = true;
+                this.gravity = 0.3;
+            }
+
+            start() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') this.leftFlipper.angle = -0.8;
+                    if (e.key === 'ArrowRight') this.rightFlipper.angle = 0.8;
+                    if (e.key === ' ') this.launchBall();
+                });
+                
+                this.gameLoop = setInterval(() => this.update(), 30);
+            }
+
+            launchBall() {
+                if (this.ball.y < 50) {
+                    this.ball.vy = -5;
+                    this.ball.vx = (Math.random() - 0.5) * 2;
+                }
+            }
+
+            update() {
+                this.ball.vy += this.gravity;
+                this.ball.x += this.ball.vx;
+                this.ball.y += this.ball.vy;
+
+                if (this.ball.x - this.ball.radius < 0) {
+                    this.ball.x = this.ball.radius;
+                    this.ball.vx *= -0.8;
+                }
+                if (this.ball.x + this.ball.radius > this.canvas.width) {
+                    this.ball.x = this.canvas.width - this.ball.radius;
+                    this.ball.vx *= -0.8;
+                }
+                if (this.ball.y - this.ball.radius < 0) {
+                    this.ball.y = this.ball.radius;
+                    this.ball.vy *= -0.8;
+                }
+
+                this.bumpers.forEach(bumper => {
+                    const dx = this.ball.x - bumper.x;
+                    const dy = this.ball.y - bumper.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < this.ball.radius + bumper.radius) {
+                        const angle = Math.atan2(dy, dx);
+                        this.ball.vx = Math.cos(angle) * 8;
+                        this.ball.vy = Math.sin(angle) * 8;
+                        this.score += 100;
+                    }
+                });
+
+                if (this.ball.y > this.canvas.height) {
+                    this.ballsLeft--;
+                    if (this.ballsLeft <= 0) {
+                        clearInterval(this.gameLoop);
+                        alert(`Game Over! Final Score: ${this.score}`);
+                    }
+                    this.ball = {x: this.canvas.width / 2, y: 100, vx: 0, vy: 0, radius: 8};
+                }
+
+                this.render();
+            }
+
+            render() {
+                this.ctx.fillStyle = '#000033';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                this.ctx.fillStyle = '#00ffff';
+                this.ball.forEach ? this.ball.forEach(b => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }) : (() => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                })();
+
+                this.ctx.fillStyle = '#FF6B6B';
+                this.bumpers.forEach(bumper => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(bumper.x, bumper.y, bumper.radius, 0, Math.PI * 2);
+                    this.ctx.fill();
+                });
+
+                this.ctx.fillStyle = '#FFD700';
+                this.drawFlipper(this.leftFlipper);
+                this.drawFlipper(this.rightFlipper);
+
+                document.getElementById('pinballScore').textContent = this.score;
+                document.getElementById('pinballBall').textContent = this.ballsLeft;
+            }
+
+            drawFlipper(flipper) {
+                const cos = Math.cos(flipper.angle);
+                const sin = Math.sin(flipper.angle);
+                const x2 = flipper.x + flipper.length * cos;
+                const y2 = flipper.y + flipper.length * sin;
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(flipper.x, flipper.y);
+                this.ctx.lineTo(x2, y2);
+                this.ctx.lineWidth = 8;
+                this.ctx.strokeStyle = '#FFD700';
+                this.ctx.stroke();
+            }
+        }
+
+        // MINESWEEPER GAME CLASS
+        class MinesweeperGame {
+            constructor(width, height, mineCount) {
+                this.width = width;
+                this.height = height;
+                this.mineCount = mineCount;
+                this.board = [];
+                this.revealed = [];
+                this.flagged = [];
+                this.gameRunning = true;
+                this.initBoard();
+            }
+
+            initBoard() {
+                for (let i = 0; i < this.height; i++) {
+                    this.board[i] = [];
+                    this.revealed[i] = [];
+                    this.flagged[i] = [];
+                    for (let j = 0; j < this.width; j++) {
+                        this.board[i][j] = 0;
+                        this.revealed[i][j] = false;
+                        this.flagged[i][j] = false;
+                    }
+                }
+
+                let mines = 0;
+                while (mines < this.mineCount) {
+                    const r = Math.floor(Math.random() * this.height);
+                    const c = Math.floor(Math.random() * this.width);
+                    if (this.board[r][c] !== 'M') {
+                        this.board[r][c] = 'M';
+                        mines++;
+                    }
+                }
+
+                for (let i = 0; i < this.height; i++) {
+                    for (let j = 0; j < this.width; j++) {
+                        if (this.board[i][j] !== 'M') {
+                            let count = 0;
+                            for (let di = -1; di <= 1; di++) {
+                                for (let dj = -1; dj <= 1; dj++) {
+                                    const ni = i + di, nj = j + dj;
+                                    if (ni >= 0 && ni < this.height && nj >= 0 && nj < this.width && this.board[ni][nj] === 'M') count++;
+                                }
+                            }
+                            this.board[i][j] = count;
+                        }
+                    }
+                }
+            }
+
+            start() {
+                const board = document.getElementById('minesweeperBoard');
+                if (!board) return;
+
+                let html = '<table style="border-collapse: collapse; border: 3px solid #808080;">';
+                for (let i = 0; i < this.height; i++) {
+                    html += '<tr>';
+                    for (let j = 0; j < this.width; j++) {
+                        html += `<td id="cell-${i}-${j}" style="width: 30px; height: 30px; border: 1px solid #999; background: #c0c0c0; text-align: center; line-height: 30px; cursor: pointer; user-select: none; font-weight: bold; font-size: 14px;"></td>`;
+                    }
+                    html += '</tr>';
+                }
+                html += '</table>';
+                board.innerHTML = html;
+
+                for (let i = 0; i < this.height; i++) {
+                    for (let j = 0; j < this.width; j++) {
+                        const cell = document.getElementById(`cell-${i}-${j}`);
+                        cell.addEventListener('click', () => this.reveal(i, j));
+                        cell.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                            this.toggleFlag(i, j);
+                        });
+                    }
+                }
+                this.render();
+            }
+
+            reveal(r, c) {
+                if (!this.gameRunning || this.revealed[r][c] || this.flagged[r][c]) return;
+
+                if (this.board[r][c] === 'M') {
+                    this.gameRunning = false;
+                    alert('Game Over! You hit a mine!');
+                    return;
+                }
+
+                this.revealCell(r, c);
+                if (this.checkWin()) {
+                    alert('You won!');
+                    this.gameRunning = false;
+                }
+                this.render();
+            }
+
+            revealCell(r, c) {
+                if (r < 0 || r >= this.height || c < 0 || c >= this.width || this.revealed[r][c]) return;
+                this.revealed[r][c] = true;
+
+                if (this.board[r][c] === 0) {
+                    for (let di = -1; di <= 1; di++) {
+                        for (let dj = -1; dj <= 1; dj++) {
+                            this.revealCell(r + di, c + dj);
+                        }
+                    }
+                }
+            }
+
+            toggleFlag(r, c) {
+                if (!this.gameRunning || this.revealed[r][c]) return;
+                this.flagged[r][c] = !this.flagged[r][c];
+                this.render();
+            }
+
+            checkWin() {
+                for (let i = 0; i < this.height; i++) {
+                    for (let j = 0; j < this.width; j++) {
+                        if (this.board[i][j] !== 'M' && !this.revealed[i][j]) return false;
+                    }
+                }
+                return true;
+            }
+
+            render() {
+                let flagCount = 0;
+                for (let i = 0; i < this.height; i++) {
+                    for (let j = 0; j < this.width; j++) {
+                        const cell = document.getElementById(`cell-${i}-${j}`);
+                        if (!cell) continue;
+
+                        if (this.flagged[i][j]) {
+                            cell.textContent = '🚩';
+                            cell.style.background = '#c0c0c0';
+                            flagCount++;
+                        } else if (this.revealed[i][j]) {
+                            if (this.board[i][j] === 'M') {
+                                cell.textContent = '💣';
+                            } else if (this.board[i][j] > 0) {
+                                cell.textContent = this.board[i][j];
+                                cell.style.color = ['', '#0000ff', '#008000', '#ff0000', '#000080', '#800000', '#008080', '#000000', '#808080'][this.board[i][j]];
+                            }
+                            cell.style.background = '#dfdfdf';
+                        }
+                    }
+                }
+                document.getElementById('flagCount').textContent = flagCount;
+            }
+        }
+    </script>
+</body>
+</html>
